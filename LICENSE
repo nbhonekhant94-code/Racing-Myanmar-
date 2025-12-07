@@ -1,4 +1,70 @@
-                                 Apache License
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Generate Room ID
+const ROOM_ID = "room-" + Math.floor(Math.random() * 9999);
+document.getElementById("room").innerText = ROOM_ID;
+
+// Random Player ID
+const PLAYER_ID = "p" + Math.floor(Math.random() * 999999);
+
+// Random Color
+function randColor() {
+  return "#" + Math.floor(Math.random()*16777215).toString(16);
+}
+
+const playerData = {
+  x: 200,
+  y: 200,
+  color: randColor()
+};
+
+// Update my player to Firebase
+function updatePosition() {
+  set(ref(db, `rooms/${ROOM_ID}/players/${PLAYER_ID}`), playerData);
+}
+
+// Listen for all players
+onValue(ref(db, `rooms/${ROOM_ID}/players`), snapshot => {
+  const players = snapshot.val() || {};
+  const game = document.getElementById("game");
+  game.innerHTML = "";
+
+  Object.keys(players).forEach(id => {
+    let p = players[id];
+    let div = document.createElement("div");
+    div.className = "player";
+    div.style.left = p.x + "px";
+    div.style.top = p.y + "px";
+    div.style.background = p.color;
+    game.appendChild(div);
+  });
+});
+
+// Controls
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp")    playerData.y -= 10;
+  if (e.key === "ArrowDown")  playerData.y += 10;
+  if (e.key === "ArrowLeft")  playerData.x -= 10;
+  if (e.key === "ArrowRight") playerData.x += 10;
+  updatePosition();
+});
+
+// First update
+updatePosition();                                 Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
